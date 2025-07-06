@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpDown, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { useWallet } from '../contexts/WalletContext';
 
 interface TradingInterfaceProps {
   onTrade: (type: 'buy' | 'sell', amount: number, price: number) => void;
 }
 
 export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) => {
+  const { isConnected, connect } = useWallet();
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isConnected) {
+      connect();
+      return;
+    }
     if (amount && price) {
       onTrade(activeTab, parseFloat(amount), parseFloat(price));
       setAmount('');
@@ -32,8 +38,11 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) =
       <div className="flex space-x-1 mb-6">
         <button
           onClick={() => setActiveTab('buy')}
+          disabled={!isConnected}
           className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'buy'
+            !isConnected
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              : activeTab === 'buy'
               ? 'bg-green-600 text-white'
               : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
           }`}
@@ -45,8 +54,11 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) =
         </button>
         <button
           onClick={() => setActiveTab('sell')}
+          disabled={!isConnected}
           className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'sell'
+            !isConnected
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              : activeTab === 'sell'
               ? 'bg-red-600 text-white'
               : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
           }`}
@@ -67,8 +79,11 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) =
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className="w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={!isConnected ? "Connect wallet first" : "0.00"}
+            disabled={!isConnected}
+            className={`w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              !isConnected ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             step="0.00001"
             min="0"
           />
@@ -82,8 +97,11 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) =
             type="number"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            placeholder="0.00"
-            className="w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={!isConnected ? "Connect wallet first" : "0.00"}
+            disabled={!isConnected}
+            className={`w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              !isConnected ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             step="0.01"
             min="0"
           />
@@ -107,12 +125,21 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({ onTrade }) =
         <button
           type="submit"
           className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'buy'
+            !isConnected
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : activeTab === 'buy'
               ? 'bg-green-600 hover:bg-green-700 text-white'
               : 'bg-red-600 hover:bg-red-700 text-white'
           }`}
         >
-          {activeTab === 'buy' ? 'Buy BTC' : 'Sell BTC'}
+          {!isConnected ? (
+            <div className="flex items-center justify-center space-x-2">
+              <Wallet className="w-4 h-4" />
+              <span>Connect Wallet to Trade</span>
+            </div>
+          ) : (
+            `${activeTab === 'buy' ? 'Buy' : 'Sell'} BTC`
+          )}
         </button>
       </form>
     </div>
